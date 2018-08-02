@@ -7,14 +7,14 @@ let admin = localStorage.getItem('admin');
 auth.onAuthStateChanged(function(user) {
   if (user) {
     if (localStorage.getItem('user')) {
-      document.location = 'index.html';
+      document.location = 'user.html';
     } else {
       // User is signed in.
       console.log('user is signed in');
     }
   } else {
     // No user is signed in.
-    document.location = 'login.html';
+    document.location = 'index.html';
   }
 });
 
@@ -28,22 +28,25 @@ document.querySelector('#logout').addEventListener('click', async ev => {
   try {
     await auth.signOut();
     localStorage.removeItem('admin');
-    document.location = 'login.html';
+    document.location = 'index.html';
   } catch (error) {
     console.error(error);
   }
 });
 
+let watchID = 0;
 function initMap() {
-  navigator.geolocation.getCurrentPosition(function(pos) {
-    let directionsDisplay = new google.maps.DirectionsRenderer();
-    let directionsService = new google.maps.DirectionsService();
-    let map = new google.maps.Map(document.getElementById('map'), {
+  let directionsDisplay = new google.maps.DirectionsRenderer();
+  let directionsService = new google.maps.DirectionsService();
+  directionsDisplay.setPanel(document.getElementById('right-panel'));
+
+  let map;
+  watchID = navigator.geolocation.watchPosition(function(pos) {
+    map = new google.maps.Map(document.getElementById('map'), {
       zoom: 12,
       center: { lat: pos.coords.latitude, lng: pos.coords.longitude }
     });
     directionsDisplay.setMap(map);
-    directionsDisplay.setPanel(document.getElementById('right-panel'));
 
     watchingCollection.onSnapshot(async function(querySnapshot) {
       if (!querySnapshot.empty) {
@@ -57,7 +60,13 @@ function initMap() {
           await db
             .collection(`users`)
             .doc(admin)
-            .update({ busy: true });
+            .update({
+              busy: true,
+              location: new firebase.firestore.GeoPoint(
+                pos.coords.latitude,
+                pos.coords.longitude
+              )
+            });
         } catch (err) {
           console.error(err);
         }
@@ -69,17 +78,7 @@ function initMap() {
         );
       } else {
         try {
-          // free the leader, and then update the status of the
-          await db
-            .collection(`users`)
-            .doc(admin.id)
-            .update({ busy: false });
-
-          await db
-            .collection(`users`)
-            .doc(localStorage.getItem('lostUser'))
-            .update({ lostStatus: false });
-          localStorage.removeItem('lostUser');
+          // free the leader, and do listeners cleanup
         } catch (err) {
           console.error(err);
         }
@@ -119,5 +118,27 @@ function calculateAndDisplayRoute(
 document.getElementById('found').addEventListener('click', async function(ev) {
   ev.preventDefault();
 
-  const lostUser = await db.collection();
+  const lostUser = localStorage.getItem('lostUser');
+  try {
+    await db
+      .collection(`users`)
+      .doc(admin)
+      .update({ busy: false });
+
+    await db
+      .collection(`users`)
+      .doc(lostUser)
+      .update({ lostStatus: false });
+
+    localStorage.removeItem('lostUser');
+
+    navigator.geolocation.clearWatch(watchID);
+
+    await db
+      .collection(`users/${admin}/watchCollection`)
+      .doc(lostUser)
+      .delete();
+  } catch (error) {
+    console.error(error);
+  }
 });

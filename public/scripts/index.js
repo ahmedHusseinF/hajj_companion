@@ -9,18 +9,16 @@ auth.onAuthStateChanged(async function(authUser) {
     if (userID) {
       // User is signed in.
       console.log('user is signed in');
-      const docSnapshot = await db
-        .collection('users')
-        .doc(userID);
+      const docSnapshot = await db.collection('users').doc(userID);
 
-        docSnapshot.onSnapshot(querySnapshot => {
-          user = querySnapshot.data();
-          if (!user.lostStatus) {
-            document.querySelector('#lost').style.display = 'block';
-          } else {
-            document.querySelector('#lost').style.display = 'none';
-          }
-        })
+      docSnapshot.onSnapshot(querySnapshot => {
+        user = querySnapshot.data();
+        if (!user.lostStatus) {
+          document.querySelector('#lost').style.display = 'block';
+        } else {
+          document.querySelector('#lost').style.display = 'none';
+        }
+      });
 
       // console.log(docSnapshot);
 
@@ -30,7 +28,7 @@ auth.onAuthStateChanged(async function(authUser) {
     }
   } else {
     // No user is signed in.
-    document.location = 'login.html';
+    document.location = 'index.html';
   }
 });
 
@@ -38,12 +36,11 @@ document.querySelector('#logout').addEventListener('click', async ev => {
   try {
     await auth.signOut();
     localStorage.removeItem('user');
-    document.location = 'login.html';
+    document.location = 'index.html';
   } catch (error) {
     console.error(error);
   }
 });
-
 
 let watchID = 0;
 
@@ -55,8 +52,6 @@ document.querySelector('#lost').addEventListener('click', async ev => {
     .doc(userID)
     .get();
 
-  
-
   watchID = navigator.geolocation.watchPosition(async pos => {
     // pos.coords.latitude / longitude
     const leaderSnapshot = await db
@@ -65,15 +60,15 @@ document.querySelector('#lost').addEventListener('click', async ev => {
       .where('type', '==', 'Leader')
       .where('busy', '==', false)
       .get();
-  
+
     if (leaderSnapshot.empty) {
       M.toast({ html: 'We are looking for a free leader right now' });
       // TODO: we need to keep looking for leaders
     }
     let leaderID = leaderSnapshot.docs[0].id;
-  
+
     docSnapshot.ref.update({ lostStatus: true, helpingLeader: leaderID });
-  
+
     db.collection(`users/${leaderID}/watchCollection`)
       .doc(docSnapshot.id)
       .set(
@@ -104,19 +99,15 @@ function initMap() {
     var marker = new google.maps.Marker({ position: myPos, map });
     directionsDisplay.setPanel(document.getElementById('right-panel'));
 
-
-    const docSnapshot = await db
-    .collection('users')
-    .doc(userID);
+    const docSnapshot = await db.collection('users').doc(userID);
 
     docSnapshot.onSnapshot(async function(querySnapshot) {
       let userData = querySnapshot.data();
       if (userData.lostStatus === true) {
-
         var leaderData = await db
-        .collection('users')
-        .doc(userData.helpingLeader)
-        .get();
+          .collection('users')
+          .doc(userData.helpingLeader)
+          .get();
 
         leaderData = leaderData.data();
         directionsDisplay.setMap(map);
@@ -126,16 +117,12 @@ function initMap() {
           directionsDisplay,
           pos.coords,
           leaderData.location
-        )
+        );
       } else {
-        navigator.geolocation.clearWatch(watchID)
+        navigator.geolocation.clearWatch(watchID);
         directionsDisplay.setMap(null);
       }
-    })
-
-
-    
-
+    });
   });
 }
 

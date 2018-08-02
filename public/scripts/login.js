@@ -27,7 +27,7 @@ form.addEventListener('submit', async function(ev) {
 
     if (theUser.type == 'User') {
       localStorage.setItem('user', theUser.id);
-      document.location = 'index.html';
+      document.location = 'user.html';
     } else {
       localStorage.setItem('admin', theUser.id);
       document.location = 'admin.html';
