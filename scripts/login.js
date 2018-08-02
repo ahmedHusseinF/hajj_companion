@@ -9,6 +9,7 @@ form.addEventListener('submit', async function(ev) {
   const email = form.elements.email.value;
   const password = form.elements.password.value;
   try {
+    // presisit the user login session even if browser close, break when logout
     await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     const data = await auth.signInWithEmailAndPassword(email, password);
     console.log(data);
@@ -18,11 +19,12 @@ form.addEventListener('submit', async function(ev) {
       .where('email', '==', email)
       .get();
 
-    //console.log(querySnapshot);
+    //
     let theUser = querySnapshot.docs[0].data();
     console.log(theUser);
     theUser.group = theUser.group.path;
     theUser.id = querySnapshot.docs[0].id;
+
     if (theUser.type == 'User') {
       localStorage.setItem('user', JSON.stringify(theUser));
       document.location = 'index.html';
