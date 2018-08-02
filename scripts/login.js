@@ -26,10 +26,10 @@ form.addEventListener('submit', async function(ev) {
     theUser.id = querySnapshot.docs[0].id;
 
     if (theUser.type == 'User') {
-      localStorage.setItem('user', JSON.stringify(theUser));
+      localStorage.setItem('user', theUser.id);
       document.location = 'index.html';
     } else {
-      localStorage.setItem('admin', JSON.stringify(theUser));
+      localStorage.setItem('admin', theUser.id);
       document.location = 'admin.html';
     }
   } catch (er) {

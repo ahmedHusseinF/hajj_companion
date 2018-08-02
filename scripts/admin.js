@@ -2,13 +2,25 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 db.settings({ timestampsInSnapshots: true });
 
-let user;
+let admin = localStorage.getItem('admin');
 
-let admin = JSON.parse(localStorage.getItem('admin'));
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    if (localStorage.getItem('user')) {
+      document.location = 'index.html';
+    } else {
+      // User is signed in.
+      console.log('user is signed in');
+    }
+  } else {
+    // No user is signed in.
+    document.location = 'login.html';
+  }
+});
 
 const watchingCollection = db
   .collection('users')
-  .doc(admin.id)
+  .doc(admin)
   .collection('watchCollection');
 
 // Logout
@@ -34,9 +46,10 @@ function initMap() {
     directionsDisplay.setPanel(document.getElementById('right-panel'));
 
     watchingCollection.onSnapshot(async function(querySnapshot) {
-      console.log(querySnapshot);
-      if (querySnapshot.docs.length > 0) {
-        user = {
+      console.log(querySnapshot.empty);
+      if (!querySnapshot.empty) {
+        document.querySelector('#map').style.display = 'block';
+        let user = {
           id: querySnapshot.docs[0].data().user,
           location: querySnapshot.docs[0].data().location
         };
@@ -44,7 +57,7 @@ function initMap() {
         try {
           await db
             .collection(`users`)
-            .doc(admin.id)
+            .doc(admin)
             .update({ busy: true });
         } catch (err) {
           console.error(err);
@@ -64,6 +77,7 @@ function initMap() {
         } catch (err) {
           console.error(err);
         }
+        document.querySelector('#map').style.display = 'none';
       }
     });
   });
