@@ -46,14 +46,13 @@ function initMap() {
     directionsDisplay.setPanel(document.getElementById('right-panel'));
 
     watchingCollection.onSnapshot(async function(querySnapshot) {
-      console.log(querySnapshot.empty);
       if (!querySnapshot.empty) {
         document.querySelector('#map').style.display = 'block';
         let user = {
           id: querySnapshot.docs[0].data().user,
           location: querySnapshot.docs[0].data().location
         };
-        // console.log(user);
+        localStorage.setItem('lostUser', user.id);
         try {
           await db
             .collection(`users`)
@@ -70,14 +69,22 @@ function initMap() {
         );
       } else {
         try {
+          // free the leader, and then update the status of the
           await db
             .collection(`users`)
             .doc(admin.id)
             .update({ busy: false });
+
+          await db
+            .collection(`users`)
+            .doc(localStorage.getItem('lostUser'))
+            .update({ lostStatus: false });
+          localStorage.removeItem('lostUser');
         } catch (err) {
           console.error(err);
         }
-        document.querySelector('#map').style.display = 'none';
+        document.getElementById('map').style.display = 'none';
+        document.getElementById('found').style.display = 'none';
       }
     });
   });
@@ -108,3 +115,9 @@ function calculateAndDisplayRoute(
     }
   );
 }
+
+document.getElementById('found').addEventListener('click', async function(ev) {
+  ev.preventDefault();
+
+  const lostUser = await db.collection();
+});
