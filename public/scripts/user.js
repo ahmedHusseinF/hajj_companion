@@ -112,6 +112,11 @@ function initMap() {
         leaderData = leaderData.data();
         directionsDisplay.setMap(map);
 
+        if (leaderData.location.latitude == 0) {
+          M.toast({ html: 'Current Leader is offline' });
+          return;
+        }
+
         calculateAndDisplayRoute(
           directionsService,
           directionsDisplay,

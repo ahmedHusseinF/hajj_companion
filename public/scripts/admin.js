@@ -142,3 +142,14 @@ document.getElementById('found').addEventListener('click', async function(ev) {
     console.error(error);
   }
 });
+
+window.onbeforeunload(async function(ev) {
+  try {
+    await db
+      .collection('users')
+      .doc(admin)
+      .update({ location: new firebase.firestore.GeoPoint(0, 0) });
+  } catch (error) {
+    console.error(error);
+  }
+});

@@ -59,6 +59,16 @@
       const elems = document.querySelectorAll('.sidenav');
       M.Sidenav.init(elems, {});
     });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    } else {
+      M.toast({ html: "Offline functionality isn't available on this device" })
+    }
+
+
     // Initialize Firebase
     var config = {
       apiKey: "AIzaSyCfXJ4DFcVAriFGCrObaWS0L_Un0nW2wu8",
