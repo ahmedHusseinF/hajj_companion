@@ -4,8 +4,13 @@ const auth = firebase.auth();
 
 auth.onAuthStateChanged(function(user) {
   if (user) {
-    // User is signed in.
-    console.log('user is signed in');
+    if (user.type == 'User') {
+      // User is signed in.
+      console.log('user is signed in');
+    } else {
+      document.location = 'admin.html';
+    }
+
   } else {
     // No user is signed in.
     document.location = 'login.html';

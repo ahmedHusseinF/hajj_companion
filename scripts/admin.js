@@ -2,6 +2,20 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 db.settings({ timestampsInSnapshots: true });
 
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    if (user.type == 'Leader') {
+      // User is signed in.
+      console.log('user is signed in');
+    } else {
+      document.location = 'index.html';
+    }
+  } else {
+    // No user is signed in.
+    document.location = 'login.html';
+  }
+});
+
 let user;
 
 let admin = localStorage.getItem('admin');
@@ -39,8 +53,9 @@ function initMap() {
     directionsDisplay.setPanel(document.getElementById('right-panel'));
 
     watchingCollection.onSnapshot(function(querySnapshot) {
-      console.log(querySnapshot);
-      if (querySnapshot.docs.length > 0) {
+      console.log(querySnapshot.empty);
+      if (!querySnapshot.empty) {
+        document.querySelector('#map').style.display = 'block';
         user = {
           id: querySnapshot.docs[0].data().user,
           location: querySnapshot.docs[0].data().location
@@ -52,6 +67,8 @@ function initMap() {
           pos.coords,
           user.location
         );
+      } else {
+        document.querySelector('#map').style.display = 'none';
       }
     });
   });
