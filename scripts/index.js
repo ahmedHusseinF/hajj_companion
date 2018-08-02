@@ -2,29 +2,29 @@ const db = firebase.firestore();
 db.settings({ timestampsInSnapshots: true });
 const auth = firebase.auth();
 
-let user;
+let userID = localStorage.getItem('user');
 
 auth.onAuthStateChanged(async function(authUser) {
   if (authUser) {
-    if (localStorage.getItem('user')) {
+    if (userID) {
       // User is signed in.
       console.log('user is signed in');
-
-      const currentUser = localStorage.getItem('user');
       const docSnapshot = await db
         .collection('users')
-        .doc(currentUser)
+        .doc(userID)
         .get();
 
-      console.log(docSnapshot);    
+      console.log(docSnapshot);
+
       // the querySnapshot is guarenteed to have ONLY one element but we have to iterate over it
       user = docSnapshot.data();
 
-
+      if (!user.lostStatus) {
+        document.querySelector('#lost').style.display = 'block';
+      }
     } else {
       document.location = 'admin.html';
     }
-
   } else {
     // No user is signed in.
     document.location = 'login.html';
@@ -41,15 +41,15 @@ document.querySelector('#logout').addEventListener('click', async ev => {
   }
 });
 
-if (!user.lostStatus) {
-  document.querySelector('#lost').css.display = 'block';
-}
-
 document.querySelector('#lost').addEventListener('click', async ev => {
-  
-  document.querySelector('#lost').css.display = 'none';
+  //document.querySelector('#lost').style.display = 'none';
 
-  docSnapshot.ref.set({ lostStatus: true }, { merge: true });
+  const docSnapshot = await db
+    .collection('users')
+    .doc(userID)
+    .get();
+
+  //docSnapshot.ref.update({ lostStatus: true });
 
   navigator.geolocation.watchPosition(async pos => {
     // pos.coords.latitude / longitude
@@ -60,6 +60,10 @@ document.querySelector('#lost').addEventListener('click', async ev => {
       .where('busy', '==', false)
       .get();
 
+    if (leaderSnapshot.empty) {
+      M.toast({ html: 'We are looking for a free leader right now' });
+      // TODO: we need to keep looking for leaders
+    }
     let leaderID = leaderSnapshot.docs[0].id;
 
     db.collection(`users/${leaderID}/watchCollection`)
@@ -77,45 +81,21 @@ document.querySelector('#lost').addEventListener('click', async ev => {
   });
 });
 
-
 function initMap() {
   navigator.geolocation.getCurrentPosition(function(pos) {
-    let directionsDisplay = new google.maps.DirectionsRenderer();
-    let directionsService = new google.maps.DirectionsService();
+    //let directionsDisplay = new google.maps.DirectionsRenderer();
+    //let directionsService = new google.maps.DirectionsService();
+    const myPos = new google.maps.LatLng(
+      pos.coords.latitude,
+      pos.coords.longitude
+    );
     let map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 12,
-      center: { lat: pos.coords.latitude, lng: pos.coords.longitude }
+      zoom: 17,
+      center: myPos
     });
-    directionsDisplay.setMap(map);
-    directionsDisplay.setPanel(document.getElementById('right-panel'));
-
-    watchingCollection.onSnapshot(async function(querySnapshot) {
-      console.log(querySnapshot.empty);
-      if (!querySnapshot.empty) {
-        document.querySelector('#map').style.display = 'block';
-        let user = {
-          id: querySnapshot.docs[0].data().user,
-          location: querySnapshot.docs[0].data().location
-        };
-        // console.log(user);
-        try {
-          await db
-            .collection(`users`)
-            .doc(admin.id)
-            .update({ busy: true });
-        } catch (err) {
-          console.error(err);
-        }
-        calculateAndDisplayRoute(
-          directionsService,
-          directionsDisplay,
-          pos.coords,
-          user.location
-        );
-      } else {
-        document.querySelector('#map').style.display = 'none';
-      }
-    });
+    var marker = new google.maps.Marker({ position: myPos, map });
+    //directionsDisplay.setMap(map);
+    //directionsDisplay.setPanel(document.getElementById('right-panel'));
   });
 }
 
@@ -144,3 +124,31 @@ function calculateAndDisplayRoute(
     }
   );
 }
+
+/* watchingCollection.onSnapshot(async function(querySnapshot) {
+  console.log(querySnapshot.empty);
+  if (!querySnapshot.empty) {
+    document.querySelector('#map').style.display = 'block';
+    let user = {
+      id: querySnapshot.docs[0].data().user,
+      location: querySnapshot.docs[0].data().location
+    };
+    // console.log(user);
+    try {
+      await db
+        .collection(`users`)
+        .doc(admin.id)
+        .update({ busy: true });
+    } catch (err) {
+      console.error(err);
+    }
+    calculateAndDisplayRoute(
+      directionsService,
+      directionsDisplay,
+      pos.coords,
+      user.location
+    );
+  } else {
+    document.querySelector('#map').style.display = 'none';
+  }
+}); */
