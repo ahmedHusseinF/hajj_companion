@@ -55,6 +55,15 @@ function initMap() {
           pos.coords,
           user.location
         );
+      } else {
+        try {
+          await db
+            .collection(`users`)
+            .doc(admin.id)
+            .update({ busy: false });
+        } catch (err) {
+          console.error(err);
+        }
       }
     });
   });
