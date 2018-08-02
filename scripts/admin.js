@@ -2,7 +2,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 db.settings({ timestampsInSnapshots: true });
 
-let admin = JSON.parse(localStorage.getItem('admin'));
+let admin = localStorage.getItem('admin');
 
 auth.onAuthStateChanged(function(user) {
   if (user) {
@@ -20,7 +20,7 @@ auth.onAuthStateChanged(function(user) {
 
 const watchingCollection = db
   .collection('users')
-  .doc(admin.id)
+  .doc(admin)
   .collection('watchCollection');
 
 // Logout
@@ -57,7 +57,7 @@ function initMap() {
         try {
           await db
             .collection(`users`)
-            .doc(admin.id)
+            .doc(admin)
             .update({ busy: true });
         } catch (err) {
           console.error(err);
