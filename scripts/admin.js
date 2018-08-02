@@ -2,24 +2,21 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 db.settings({ timestampsInSnapshots: true });
 
+let admin = JSON.parse(localStorage.getItem('admin'));
+
 auth.onAuthStateChanged(function(user) {
   if (user) {
-    if (user.type == 'Leader') {
+    if (localStorage.getItem('user')) {
+      document.location = 'index.html';
+    } else {
       // User is signed in.
       console.log('user is signed in');
-    } else {
-      document.location = 'index.html';
     }
   } else {
     // No user is signed in.
     document.location = 'login.html';
   }
 });
-
-let user;
-
-let admin = localStorage.getItem('admin');
-admin = JSON.parse(admin);
 
 const watchingCollection = db
   .collection('users')
@@ -37,30 +34,34 @@ document.querySelector('#logout').addEventListener('click', async ev => {
   }
 });
 
-//function onUserLocationChange() {}
-
 function initMap() {
   navigator.geolocation.getCurrentPosition(function(pos) {
-    myLocation = pos.coords;
-
     let directionsDisplay = new google.maps.DirectionsRenderer();
     let directionsService = new google.maps.DirectionsService();
     let map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 7,
+      zoom: 12,
       center: { lat: pos.coords.latitude, lng: pos.coords.longitude }
     });
     directionsDisplay.setMap(map);
     directionsDisplay.setPanel(document.getElementById('right-panel'));
 
-    watchingCollection.onSnapshot(function(querySnapshot) {
+    watchingCollection.onSnapshot(async function(querySnapshot) {
       console.log(querySnapshot.empty);
       if (!querySnapshot.empty) {
         document.querySelector('#map').style.display = 'block';
-        user = {
+        let user = {
           id: querySnapshot.docs[0].data().user,
           location: querySnapshot.docs[0].data().location
         };
-        console.log(user);
+        // console.log(user);
+        try {
+          await db
+            .collection(`users`)
+            .doc(admin.id)
+            .update({ busy: true });
+        } catch (err) {
+          console.error(err);
+        }
         calculateAndDisplayRoute(
           directionsService,
           directionsDisplay,
