@@ -45,6 +45,7 @@ document.querySelector('#lost').addEventListener('click', async ev => {
         .collection('users')
         .where('group', '==', user.group.path)
         .where('type', '==', 'Leader')
+        .where('busy', '==', false)
         .get();
 
       let LeaderID = snapshot.docs[0].id;
@@ -57,7 +58,7 @@ document.querySelector('#lost').addEventListener('click', async ev => {
               pos.coords.latitude,
               pos.coords.longitude
             ),
-            id: doc.id
+            user: doc.id
           },
           { merge: true }
         );
