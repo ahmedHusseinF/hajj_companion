@@ -31,15 +31,36 @@ document.querySelector('#lost').addEventListener('click', async ev => {
 
   // the querySnapshot is guarenteed to have ONLY one element but we have to iterate over it
   querySnapshot.forEach(async doc => {
-    if (!doc.data().lostStatus) {
-      const user = await doc.ref;
-      //console.log(user);
-      user.set({ lostStatus: true }, { merge: true });
+    let user = doc.data();
+
+    if (!user.lostStatus) {
+      doc.ref.set({ lostStatus: true }, { merge: true });
     }
 
-    navigator.geolocation.watchPosition(function(pos) {
+    let addedDocument;
+
+    navigator.geolocation.watchPosition(async pos => {
       // pos.coords.latitude / longitude
-      console.log(pos);
+      const snapshot = await db
+        .collection('users')
+        .where('group', '==', user.group.path)
+        .where('type', '==', 'Leader')
+        .get();
+
+      let LeaderID = snapshot.docs[0].id;
+
+      db.collection(`users/${LeaderID}/watchCollection`)
+        .doc(doc.id)
+        .set(
+          {
+            location: new firebase.firestore.GeoPoint(
+              pos.coords.latitude,
+              pos.coords.longitude
+            ),
+            id: doc.id
+          },
+          { merge: true }
+        );
     });
   });
 });
