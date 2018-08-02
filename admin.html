@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Hajj Companion | Login</title>
+  <!-- Compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Roboto" rel="stylesheet">
+  <link rel="stylesheet" href="./css/shared.css">
+</head>
+
+<body>
+
+  <nav class="primary-color">
+    <div class="nav-wrapper container primary-color">
+      <a href="index.html" class="brand-logo">Logo</a>
+      <a href="#" data-target="mobile-demo" class="sidenav-trigger">
+        <i class="material-icons">menu</i>
+      </a>
+      <ul class="right hide-on-med-and-down">
+
+      </ul>
+    </div>
+  </nav>
+
+  <ul class="sidenav" id="mobile-demo">
+
+  </ul>
+
+  <main class="container">
+    <div id="map"></div>
+
+  </main>
+
+
+  <!-- Compiled and minified JavaScript -->
+  <script src="https://www.gstatic.com/firebasejs/5.3.0/firebase.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.3.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.3.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.3.0/firebase-firestore.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+  <script>
+    var map;
+    function initMap() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: -34.397, lng: 150.644 },
+        zoom: 8
+      });
+    }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCfXJ4DFcVAriFGCrObaWS0L_Un0nW2wu8&callback=initMap" async
+    defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const elems = document.querySelectorAll('.sidenav');
+      M.Sidenav.init(elems, {});
+    });
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyCfXJ4DFcVAriFGCrObaWS0L_Un0nW2wu8",
+      authDomain: "docs-getting-started.firebaseapp.com",
+      databaseURL: "https://docs-getting-started.firebaseio.com",
+      projectId: "docs-getting-started",
+      storageBucket: "docs-getting-started.appspot.com",
+      messagingSenderId: "252519794991"
+    };
+    firebase.initializeApp(config);
+  </script>
+  <script src="./scripts/admin.js"></script>
+</body>
+
+</html>

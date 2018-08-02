@@ -1,0 +1,14 @@
+:root {
+  --dark-primary-color: #00796b;
+  --primary-color: #009688;
+  --secondry-color: #ff5722;
+  --primary-text: #212121;
+}
+
+nav {
+  background-color: var(--primary-color) !important;
+}
+
+#map {
+  height: 100%;
+}
