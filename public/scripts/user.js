@@ -24,7 +24,7 @@ auth.onAuthStateChanged(async function(authUser) {
 
       // the querySnapshot is guarenteed to have ONLY one element but we have to iterate over it
     } else {
-      document.location = 'admin.html';
+      document.location = 'leader.html';
     }
   } else {
     // No user is signed in.
@@ -52,83 +52,86 @@ document.querySelector('#lost').addEventListener('click', async ev => {
     .doc(userID)
     .get();
 
-  watchID = navigator.geolocation.watchPosition(async pos => {
-    // pos.coords.latitude / longitude
-    const leaderSnapshot = await db
-      .collection('users')
-      .where('group', '==', user.group.path)
-      .where('type', '==', 'Leader')
-      .where('busy', '==', false)
-      .get();
+  watchID = navigator.geolocation.watchPosition(
+    async pos => {
+      console.log(pos, 'tracking location - user');
 
-    if (leaderSnapshot.empty) {
-      M.toast({ html: 'We are looking for a free leader right now' });
-      // TODO: we need to keep looking for leaders
-    }
-    let leaderID = leaderSnapshot.docs[0].id;
+      // pos.coords.latitude / longitude
+      const leaderSnapshot = await db
+        .collection('users')
+        .where('group', '==', user.group.path)
+        .where('type', '==', 'Leader')
+        .orderBy('handledLosses')
+        .get();
 
-    docSnapshot.ref.update({ lostStatus: true, helpingLeader: leaderID });
+      let leaderID = leaderSnapshot.docs[0].id;
 
-    db.collection(`users/${leaderID}/watchCollection`)
-      .doc(docSnapshot.id)
-      .set(
-        {
+      docSnapshot.ref.update({ lostStatus: true, helpingLeader: leaderID });
+
+      db.collection(`users/${leaderID}/watchCollection`)
+        .doc(docSnapshot.id)
+        .update({
           location: new firebase.firestore.GeoPoint(
             pos.coords.latitude,
             pos.coords.longitude
           ),
           user: docSnapshot.id
-        },
-        { merge: true }
-      );
-  });
+        });
+    },
+    _ => {},
+    { enableHighAccuracy: true }
+  );
 });
 
 function initMap() {
-  navigator.geolocation.getCurrentPosition(async function(pos) {
-    let directionsDisplay = new google.maps.DirectionsRenderer();
-    let directionsService = new google.maps.DirectionsService();
-    const myPos = new google.maps.LatLng(
-      pos.coords.latitude,
-      pos.coords.longitude
-    );
-    let map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 17,
-      center: myPos
-    });
-    var marker = new google.maps.Marker({ position: myPos, map });
-    directionsDisplay.setPanel(document.getElementById('right-panel'));
+  navigator.geolocation.getCurrentPosition(
+    async function(pos) {
+      let directionsDisplay = new google.maps.DirectionsRenderer();
+      let directionsService = new google.maps.DirectionsService();
+      const myPos = new google.maps.LatLng(
+        pos.coords.latitude,
+        pos.coords.longitude
+      );
+      let map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 17,
+        center: myPos
+      });
+      var marker = new google.maps.Marker({ position: myPos, map });
+      directionsDisplay.setPanel(document.getElementById('right-panel'));
 
-    const docSnapshot = await db.collection('users').doc(userID);
+      const docSnapshot = await db.collection('users').doc(userID);
 
-    docSnapshot.onSnapshot(async function(querySnapshot) {
-      let userData = querySnapshot.data();
-      if (userData.lostStatus === true) {
-        var leaderData = await db
-          .collection('users')
-          .doc(userData.helpingLeader)
-          .get();
+      docSnapshot.onSnapshot(async function(querySnapshot) {
+        let userData = querySnapshot.data();
+        if (userData.lostStatus === true) {
+          var leaderData = await db
+            .collection('users')
+            .doc(userData.helpingLeader)
+            .get();
 
-        leaderData = leaderData.data();
-        directionsDisplay.setMap(map);
+          leaderData = leaderData.data();
+          directionsDisplay.setMap(map);
 
-        if (leaderData.location.latitude == 0) {
-          M.toast({ html: 'Current Leader is offline' });
-          return;
+          if (leaderData.location.latitude == 0) {
+            M.toast({ html: 'Current Leader is offline' });
+            return;
+          }
+
+          calculateAndDisplayRoute(
+            directionsService,
+            directionsDisplay,
+            pos.coords,
+            leaderData.location
+          );
+        } else {
+          navigator.geolocation.clearWatch(watchID);
+          directionsDisplay.setMap(null);
         }
-
-        calculateAndDisplayRoute(
-          directionsService,
-          directionsDisplay,
-          pos.coords,
-          leaderData.location
-        );
-      } else {
-        navigator.geolocation.clearWatch(watchID);
-        directionsDisplay.setMap(null);
-      }
-    });
-  });
+      });
+    },
+    _ => {},
+    { enableHighAccuracy: true }
+  );
 }
 
 function calculateAndDisplayRoute(
@@ -169,7 +172,7 @@ function calculateAndDisplayRoute(
     try {
       await db
         .collection(`users`)
-        .doc(admin.id)
+        .doc(leader.id)
         .update({ busy: true });
     } catch (err) {
       console.error(err);
