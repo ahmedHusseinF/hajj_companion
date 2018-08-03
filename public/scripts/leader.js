@@ -158,7 +158,7 @@ function initMap() {
   let insertMaps = document.getElementById('insertMaps');
 
   watchingCollection.onSnapshot(async function(querySnapshot) {
-    //insertMaps.innerHTML = '';
+    // insertMaps.innerHTML = '';
     // window.allMaps = [];
     let handledLosses = 0;
 
@@ -211,10 +211,17 @@ function calculateAndDisplayRoute(
 
 window.onbeforeunload = async function(ev) {
   try {
-    await db
-      .collection('users')
-      .doc(leader)
-      .update({ location: new firebase.firestore.GeoPoint(0, 0) });
+    this.navigator.geolocation.getCurrentPosition(async pos => {
+      await db
+        .collection('users')
+        .doc(leader)
+        .update({
+          location: new firebase.firestore.GeoPoint(
+            pos.coords.latitude,
+            pos.coords.longitude
+          )
+        });
+    });
   } catch (error) {
     console.error(error);
   }
