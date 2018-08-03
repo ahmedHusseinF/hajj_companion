@@ -55,94 +55,125 @@ let watchID = navigator.geolocation.watchPosition(
     });
   },
   _ => {},
-  { enableHighAccuracy: true, maximumAge: 0 }
+  { enableHighAccuracy: true }
 );
+
+function generateMapForUser(user, loc, handledLosses, name) {
+  let directionsDisplay = new google.maps.DirectionsRenderer();
+  let directionsService = new google.maps.DirectionsService();
+
+  let li = document.createElement('li');
+  li.classList.add(user);
+  let header = document.createElement('div');
+  header.classList.add('collapsible-header');
+  let placeIcon = document.createElement('i');
+  placeIcon.classList.add('material-icon');
+  placeIcon.innerHTML = 'place';
+  header.appendChild(placeIcon);
+  header.innerText = name;
+
+  let body = document.createElement('div');
+  body.classList.add('collapsible-body');
+  let map = document.createElement('div');
+  map.classList.add('map');
+  let googleMap = new google.maps.Map(map, {
+    zoom: 17,
+    center: globalPos
+  });
+  directionsDisplay.setMap(googleMap);
+
+  calculateAndDisplayRoute(
+    directionsService,
+    directionsDisplay,
+    { latitude: globalPos.lat, longitude: globalPos.lng },
+    loc
+  );
+  allMaps.push({ googleMap, directionsDisplay, directionsService, user });
+
+  body.appendChild(map);
+  let found = document.createElement('a');
+  found.classList.add(
+    'btn',
+    'btn-small',
+    'waves-effect',
+    'waves-light',
+    'waves-green',
+    'found'
+  );
+  found.innerHTML = 'FOUND';
+  found.id = user;
+  body.appendChild(found);
+
+  li.appendChild(header);
+  li.appendChild(body);
+  insertMaps.appendChild(li);
+
+  handledLosses++;
+  let els = document.querySelectorAll('.found');
+  if (els.length) {
+    els.forEach(el => {
+      el.onclick = async function(ev) {
+        ev.preventDefault();
+        console.log(ev);
+
+        const lostUser = ev.target.id;
+        try {
+          await db
+            .collection(`users`)
+            .doc(lostUser)
+            .update({ lostStatus: false, helpingLeader: '' });
+
+          localStorage.removeItem('lostUser');
+
+          navigator.geolocation.clearWatch(watchID);
+
+          await db
+            .collection(`users/${leader}/watchCollection`)
+            .doc(lostUser)
+            .delete();
+
+          insertMaps.removeChild(document.querySelector(`li.${user}`));
+        } catch (error) {
+          console.error(error);
+        }
+      };
+    });
+  }
+}
+
+function updateMapForUser(user, loc) {
+  window.allMaps.forEach(obj => {
+    if (obj.user == user) {
+      calculateAndDisplayRoute(
+        obj.directionsService,
+        obj.directionsDisplay,
+        { latitude: globalPos.lat, longitude: globalPos.lng },
+        loc
+      );
+    }
+  });
+}
 
 function initMap() {
   let insertMaps = document.getElementById('insertMaps');
 
   watchingCollection.onSnapshot(async function(querySnapshot) {
-    insertMaps.innerHTML = '';
-
+    //insertMaps.innerHTML = '';
+    // window.allMaps = [];
     let handledLosses = 0;
-    window.allMaps = [];
+
     querySnapshot.docs.forEach(async doc => {
-      let directionsDisplay = new google.maps.DirectionsRenderer();
-      let directionsService = new google.maps.DirectionsService();
+      let data = doc.data();
 
-      let li = document.createElement('li');
-      let header = document.createElement('div');
-      header.classList.add('collapsible-header');
-      let placeIcon = document.createElement('i');
-      placeIcon.classList.add('material-icon');
-      placeIcon.innerHTML = 'place';
-      header.appendChild(placeIcon);
-      header.innerText = 'HELP';
-
-      let body = document.createElement('div');
-      body.classList.add('collapsible-body');
-      let map = document.createElement('div');
-      map.classList.add('map');
-      let googleMap = new google.maps.Map(map, {
-        zoom: 30,
-        center: globalPos
+      let index = window.allMaps.find(obj => {
+        if (obj.user == data.user) return true;
       });
-      directionsDisplay.setMap(googleMap);
-
-      calculateAndDisplayRoute(
-        directionsService,
-        directionsDisplay,
-        { latitude: globalPos.lat, longitude: globalPos.lng },
-        doc.data().location
-      );
-      allMaps.push({ googleMap, directionsDisplay, directionsService });
-
-      body.appendChild(map);
-      let found = document.createElement('a');
-      found.classList.add(
-        'btn',
-        'btn-small',
-        'waves-effect',
-        'waves-light',
-        'waves-green',
-        'found'
-      );
-      found.innerHTML = 'FOUND';
-      found.id = doc.data().user;
-      body.appendChild(found);
-
-      li.appendChild(header);
-      li.appendChild(body);
-      insertMaps.appendChild(li);
-
-      handledLosses++;
-      let els = document.querySelectorAll('.found');
-      if (els.length) {
-        els.forEach(el => {
-          el.onclick = async function(ev) {
-            ev.preventDefault();
-            console.log(ev);
-
-            const lostUser = ev.target.id;
-            try {
-              await db
-                .collection(`users`)
-                .doc(lostUser)
-                .update({ lostStatus: false, helpingLeader: '' });
-
-              localStorage.removeItem('lostUser');
-
-              navigator.geolocation.clearWatch(watchID);
-
-              await db
-                .collection(`users/${leader}/watchCollection`)
-                .doc(lostUser)
-                .delete();
-            } catch (error) {
-              console.error(error);
-            }
-          };
-        });
+      if (index) {
+        // we found him
+        updateMapForUser(data.user, data.location);
+      } else {
+        // generate
+        generateMapForUser(data.user, data.location, handledLosses, data.name);
       }
     });
     await db
