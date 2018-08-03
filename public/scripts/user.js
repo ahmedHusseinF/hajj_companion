@@ -79,13 +79,14 @@ document.querySelector('#lost').addEventListener('click', async ev => {
               pos.coords.latitude,
               pos.coords.longitude
             ),
-            user: docSnapshot.id
+            user: docSnapshot.id,
+            name: docSnapshot.data().name
           },
           { merge: true }
         );
     },
     _ => {},
-    { enableHighAccuracy: true, maximumAge: 0 }
+    { enableHighAccuracy: true }
   );
 });
 
@@ -136,7 +137,7 @@ function initMap() {
       });
     },
     _ => {},
-    { enableHighAccuracy: true, maximumAge: 0 }
+    { enableHighAccuracy: true }
   );
 }
 
@@ -165,31 +166,3 @@ function calculateAndDisplayRoute(
     }
   );
 }
-
-/* watchingCollection.onSnapshot(async function(querySnapshot) {
-  console.log(querySnapshot.empty);
-  if (!querySnapshot.empty) {
-    document.querySelector('#map').style.display = 'block';
-    let user = {
-      id: querySnapshot.docs[0].data().user,
-      location: querySnapshot.docs[0].data().location
-    };
-    // console.log(user);
-    try {
-      await db
-        .collection(`users`)
-        .doc(leader.id)
-        .update({ busy: true });
-    } catch (err) {
-      console.error(err);
-    }
-    calculateAndDisplayRoute(
-      directionsService,
-      directionsDisplay,
-      pos.coords,
-      user.location
-    );
-  } else {
-    document.querySelector('#map').style.display = 'none';
-  }
-}); */
