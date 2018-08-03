@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Hajj Companion | Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+    <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Roboto" rel="stylesheet"> -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
+
+    <link rel="stylesheet" href="./css/shared.css">
+</head>
+<body>
+
+    <nav class="primary-color">
+        <div class="nav-wrapper container primary-color">
+            <a href="index.html" class="brand-logo">Logo</a>
+            <a href="#" data-target="mobile" class="sidenav-trigger">
+            <i class="material-icons">menu</i>
+            </a>
+            <ul class="right ">
+            <li>
+                <a id="logout">Logout</a>
+            </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container" id="report">
+            <button class="btn waves-effect waves-light" id="generate">Generate Report
+                <i class="material-icons right">send</i>
+            </button>
+        <div id="number"></div>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <td>Country</td>
+                        <td>Number</td>
+                    </tr>
+                </thead>
+                <tbody id="countries">
+
+                </tbody>
+            </table>
+        </div>
+        <br><br><br><br><br>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <td>Gender</td>
+                        <td>Number</td>
+                    </tr>
+                </thead>
+                <tbody id="genders">
+
+                </tbody>
+            </table>
+        </div>
+    </main>
+    
+    <script src="https://www.gstatic.com/firebasejs/5.3.0/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.3.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.3.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.3.0/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const elems = document.querySelectorAll('.sidenav');
+            M.Sidenav.init(elems, {});
+        });
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyCfXJ4DFcVAriFGCrObaWS0L_Un0nW2wu8",
+            authDomain: "docs-getting-started.firebaseapp.com",
+            databaseURL: "https://docs-getting-started.firebaseio.com",
+            projectId: "docs-getting-started",
+            storageBucket: "docs-getting-started.appspot.com",
+            messagingSenderId: "252519794991"
+        };
+        firebase.initializeApp(config);
+    </script>
+
+    <script src="scripts/reports.js"></script>
+</body>
+</html>

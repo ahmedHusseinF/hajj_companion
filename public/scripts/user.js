@@ -59,7 +59,7 @@ document.querySelector('#lost').addEventListener('click', async ev => {
       // pos.coords.latitude / longitude
       const leaderSnapshot = await db
         .collection('users')
-        .where('group', '==', user.group.path)
+        .where('group', '==', user.group)
         .where('type', '==', 'Leader')
         .orderBy('handledLosses')
         .get();
