@@ -2,7 +2,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 db.settings({ timestampsInSnapshots: true });
 
-let admin = localStorage.getItem('admin');
+let leader = localStorage.getItem('leader');
 
 auth.onAuthStateChanged(function(user) {
   if (user) {
@@ -20,14 +20,14 @@ auth.onAuthStateChanged(function(user) {
 
 const watchingCollection = db
   .collection('users')
-  .doc(admin)
+  .doc(leader)
   .collection('watchCollection');
 
 // Logout
 document.querySelector('#logout').addEventListener('click', async ev => {
   try {
     await auth.signOut();
-    localStorage.removeItem('admin');
+    localStorage.removeItem('leader');
     document.location = 'index.html';
   } catch (error) {
     console.error(error);
@@ -59,7 +59,7 @@ function initMap() {
         try {
           await db
             .collection(`users`)
-            .doc(admin)
+            .doc(leader)
             .update({
               busy: true,
               location: new firebase.firestore.GeoPoint(
@@ -122,7 +122,7 @@ document.getElementById('found').addEventListener('click', async function(ev) {
   try {
     await db
       .collection(`users`)
-      .doc(admin)
+      .doc(leader)
       .update({ busy: false });
 
     await db
@@ -135,7 +135,7 @@ document.getElementById('found').addEventListener('click', async function(ev) {
     navigator.geolocation.clearWatch(watchID);
 
     await db
-      .collection(`users/${admin}/watchCollection`)
+      .collection(`users/${leader}/watchCollection`)
       .doc(lostUser)
       .delete();
   } catch (error) {
@@ -143,13 +143,13 @@ document.getElementById('found').addEventListener('click', async function(ev) {
   }
 });
 
-window.onbeforeunload(async function(ev) {
+window.onbeforeunload = async function(ev) {
   try {
     await db
       .collection('users')
-      .doc(admin)
+      .doc(leader)
       .update({ location: new firebase.firestore.GeoPoint(0, 0) });
   } catch (error) {
     console.error(error);
   }
-});
+};

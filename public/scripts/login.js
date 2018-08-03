@@ -29,8 +29,8 @@ form.addEventListener('submit', async function(ev) {
       localStorage.setItem('user', theUser.id);
       document.location = 'user.html';
     } else {
-      localStorage.setItem('admin', theUser.id);
-      document.location = 'admin.html';
+      localStorage.setItem('leader', theUser.id);
+      document.location = 'leader.html';
     }
   } catch (er) {
     console.error(er);
