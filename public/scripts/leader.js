@@ -34,108 +34,122 @@ document.querySelector('#logout').addEventListener('click', async ev => {
   }
 });
 
-window.globalPos = null;
+window.globalPos = { lat: 22.212321, lng: 39.31453321 };
 window.allMaps = [];
-let watchID = navigator.geolocation.watchPosition(async pos => {
-  globalPos = { lat: pos.coords.latitude, lang: pos.coords.longitude };
-  await db
-    .collection('users')
-    .doc(admin)
-    .update({ location: globalPos });
+let watchID = navigator.geolocation.watchPosition(
+  async pos => {
+    globalPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
 
-  window.allMaps.forEach(map => {
-    map.setCenter(globalPos);
-  });
-});
+    await db
+      .collection('users')
+      .doc(leader)
+      .update({
+        location: new firebase.firestore.GeoPoint(globalPos.lat, globalPos.lng)
+      });
+
+    window.allMaps.forEach(obj => {
+      if (!obj.map) {
+        return;
+      }
+      obj.map.setCenter(globalPos);
+    });
+  },
+  _ => {},
+  { enableHighAccuracy: true, maximumAge: 0 }
+);
 
 function initMap() {
-  let directionsDisplay = new google.maps.DirectionsRenderer();
-  let directionsService = new google.maps.DirectionsService();
   let insertMaps = document.getElementById('insertMaps');
 
   watchingCollection.onSnapshot(async function(querySnapshot) {
+    insertMaps.innerHTML = '';
+
+    let handledLosses = 0;
+    window.allMaps = [];
     querySnapshot.docs.forEach(async doc => {
+      let directionsDisplay = new google.maps.DirectionsRenderer();
+      let directionsService = new google.maps.DirectionsService();
+
       let li = document.createElement('li');
       let header = document.createElement('div');
       header.classList.add('collapsible-header');
-      let i = document.createElement('i');
-      i.classList.add('material-icon');
-      i.innerHTML = 'place';
-      header.appendChild(i);
+      let placeIcon = document.createElement('i');
+      placeIcon.classList.add('material-icon');
+      placeIcon.innerHTML = 'place';
+      header.appendChild(placeIcon);
       header.innerText = 'HELP';
 
       let body = document.createElement('div');
       body.classList.add('collapsible-body');
       let map = document.createElement('div');
-      let googleMap = new gooogle.maps.Map(map, {
-        zoom: 12,
+      map.classList.add('map');
+      let googleMap = new google.maps.Map(map, {
+        zoom: 30,
         center: globalPos
       });
-      allMaps.push(googleMap);
+      directionsDisplay.setMap(googleMap);
+
+      calculateAndDisplayRoute(
+        directionsService,
+        directionsDisplay,
+        { latitude: globalPos.lat, longitude: globalPos.lng },
+        doc.data().location
+      );
+      allMaps.push({ googleMap, directionsDisplay, directionsService });
+
       body.appendChild(map);
+      let found = document.createElement('a');
+      found.classList.add(
+        'btn',
+        'btn-small',
+        'waves-effect',
+        'waves-light',
+        'waves-green',
+        'found'
+      );
+      found.innerHTML = 'FOUND';
+      found.id = doc.data().user;
+      body.appendChild(found);
 
       li.appendChild(header);
       li.appendChild(body);
       insertMaps.appendChild(li);
-    });
-  });
 
-  let map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12,
-    center: { lat: pos.coords.latitude, lng: pos.coords.longitude }
-  });
-  watchID = navigator.geolocation.watchPosition(
-    function(pos) {
-      console.log(pos, 'tracking location - admin');
-      map.setCenter(
-        new firabase.firestore.GeoPoint(
-          pos.coords.latitude,
-          pos.coords.longitude
-        )
-      );
+      handledLosses++;
+      let els = document.querySelectorAll('.found');
+      if (els.length) {
+        els.forEach(el => {
+          el.onclick = async function(ev) {
+            ev.preventDefault();
+            console.log(ev);
 
-      watchingCollection.onSnapshot(async function(querySnapshot) {
-        if (!querySnapshot.empty) {
-          document.querySelector('#map').style.display = 'block';
-          let user = {
-            id: querySnapshot.docs[0].data().user,
-            location: querySnapshot.docs[0].data().location
+            const lostUser = ev.target.id;
+            try {
+              await db
+                .collection(`users`)
+                .doc(lostUser)
+                .update({ lostStatus: false, helpingLeader: '' });
+
+              localStorage.removeItem('lostUser');
+
+              navigator.geolocation.clearWatch(watchID);
+
+              await db
+                .collection(`users/${leader}/watchCollection`)
+                .doc(lostUser)
+                .delete();
+            } catch (error) {
+              console.error(error);
+            }
           };
-          localStorage.setItem('lostUser', user.id);
-          try {
-            await db
-              .collection(`users`)
-              .doc(admin)
-              .update({
-                busy: true,
-                location: new firebase.firestore.GeoPoint(
-                  pos.coords.latitude,
-                  pos.coords.longitude
-                )
-              });
-          } catch (err) {
-            console.error(err);
-          }
-          calculateAndDisplayRoute(
-            directionsService,
-            directionsDisplay,
-            pos.coords,
-            user.location
-          );
-        } else {
-          try {
-            // free the leader, and do listeners cleanup
-          } catch (err) {
-            console.error(err);
-          }
-          document.getElementById('map').style.display = 'none';
-          document.getElementById('found').style.display = 'none';
-        }
-      });
-    },
-    _ => {},
-    { enableHighAccuracy: true }
-  );
+        });
+      }
+    });
+    await db
+      .collection('users')
+      .doc(leader)
+      .update({ handledLosses });
+  });
 }
 
 function calculateAndDisplayRoute(
@@ -156,36 +170,13 @@ function calculateAndDisplayRoute(
     },
     function(response, status) {
       if (status === 'OK') {
-        //directionsDisplay.setDirections(response);
+        directionsDisplay.setDirections(response);
       } else {
         window.alert('Directions request failed due to ' + status);
       }
     }
   );
 }
-
-document.getElementById('found').addEventListener('click', async function(ev) {
-  ev.preventDefault();
-
-  const lostUser = localStorage.getItem('lostUser');
-  try {
-    await db
-      .collection(`users`)
-      .doc(lostUser)
-      .update({ lostStatus: false, helpingLeader: '' });
-
-    localStorage.removeItem('lostUser');
-
-    navigator.geolocation.clearWatch(watchID);
-
-    await db
-      .collection(`users/${leader}/watchCollection`)
-      .doc(lostUser)
-      .delete();
-  } catch (error) {
-    console.error(error);
-  }
-});
 
 window.onbeforeunload = async function(ev) {
   try {
@@ -197,3 +188,8 @@ window.onbeforeunload = async function(ev) {
     console.error(error);
   }
 };
+
+document.addEventListener('DOMContentLoaded', function() {
+  var elems = document.querySelectorAll('.collapsible');
+  var instances = M.Collapsible.init(elems, {});
+});

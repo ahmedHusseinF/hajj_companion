@@ -43,7 +43,7 @@ document.querySelector('#logout').addEventListener('click', async ev => {
 });
 
 let watchID = 0;
-
+let globalPos = null;
 document.querySelector('#lost').addEventListener('click', async ev => {
   document.querySelector('#lost').style.display = 'none';
 
@@ -55,11 +55,14 @@ document.querySelector('#lost').addEventListener('click', async ev => {
   watchID = navigator.geolocation.watchPosition(
     async pos => {
       console.log(pos, 'tracking location - user');
-
+      globalPos = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude
+      };
       // pos.coords.latitude / longitude
       const leaderSnapshot = await db
         .collection('users')
-        .where('group', '==', user.group.path)
+        .where('group', '==', user.group)
         .where('type', '==', 'Leader')
         .orderBy('handledLosses')
         .get();
@@ -70,16 +73,19 @@ document.querySelector('#lost').addEventListener('click', async ev => {
 
       db.collection(`users/${leaderID}/watchCollection`)
         .doc(docSnapshot.id)
-        .update({
-          location: new firebase.firestore.GeoPoint(
-            pos.coords.latitude,
-            pos.coords.longitude
-          ),
-          user: docSnapshot.id
-        });
+        .set(
+          {
+            location: new firebase.firestore.GeoPoint(
+              pos.coords.latitude,
+              pos.coords.longitude
+            ),
+            user: docSnapshot.id
+          },
+          { merge: true }
+        );
     },
     _ => {},
-    { enableHighAccuracy: true }
+    { enableHighAccuracy: true, maximumAge: 0 }
   );
 });
 
@@ -120,7 +126,7 @@ function initMap() {
           calculateAndDisplayRoute(
             directionsService,
             directionsDisplay,
-            pos.coords,
+            globalPos,
             leaderData.location
           );
         } else {
@@ -130,7 +136,7 @@ function initMap() {
       });
     },
     _ => {},
-    { enableHighAccuracy: true }
+    { enableHighAccuracy: true, maximumAge: 0 }
   );
 }
 
