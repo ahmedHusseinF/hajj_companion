@@ -27,6 +27,11 @@ form.addEventListener('submit', async function(ev) {
 
     if (theUser.type == 'User') {
       localStorage.setItem('user', theUser.id);
+      let doc = await db
+        .collection(`/companies/qppaqXD5s5ZgzODenePR/groups`)
+        .doc('SpGh6rLxBjQjZFAIFbhb')
+        .get();
+      localStorage.setItem('camp', JSON.stringify(doc.data().campLocation));
       document.location = 'user.html';
     } else {
       localStorage.setItem('leader', theUser.id);

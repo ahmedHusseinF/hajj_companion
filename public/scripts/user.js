@@ -125,11 +125,6 @@ function initMap() {
           leaderData = leaderData.data();
           directionsDisplay.setMap(map);
 
-          if (leaderData.location.latitude == 0) {
-            M.toast({ html: 'Current Leader is offline' });
-            return;
-          }
-
           calculateAndDisplayRoute(
             directionsService,
             directionsDisplay,
@@ -172,3 +167,21 @@ function calculateAndDisplayRoute(
     }
   );
 }
+
+document.getElementById('camp').addEventListener('click', ev => {
+  const loc = localStorage.getItem('camp');
+  let directionsDisplay = new google.maps.DirectionsRenderer();
+  let directionsService = new google.maps.DirectionsService();
+  const myPos = new google.maps.LatLng(loc._lat, loc._lng);
+  let map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 17,
+    center: myPos
+  });
+  var marker = new google.maps.Marker({ position: myPos, map });
+  calculateAndDisplayRoute(
+    directionsService,
+    directionsDisplay,
+    globalPos,
+    myPos
+  );
+});
