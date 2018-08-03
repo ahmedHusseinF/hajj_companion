@@ -1,3 +1,9 @@
+document.addEventListener('DOMContentLoaded', function() {
+  var elems = document.querySelectorAll('.collapsible');
+  var instances = M.Collapsible.init(elems, {});
+  console.log(elems);
+});
+
 const db = firebase.firestore();
 db.settings({ timestampsInSnapshots: true });
 const auth = firebase.auth();

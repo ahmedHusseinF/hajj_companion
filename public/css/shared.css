@@ -23,7 +23,15 @@ button {
 }
 
 .login {
-  margin-top: 30%;
+  margin-top: 150px;
+}
+
+@media (min-width: 900) {
+    .login {
+        width: 50% !important;
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
 .form-heading {
@@ -33,3 +41,28 @@ button {
     margin-bottom: 50px;
 }
 
+nav .brand-logo {
+    font-size: 13px !important;
+}
+
+#lost {
+    width: 49%;
+    background-color: var(--secondry-color);
+    padding-bottom: 42px;
+    display: inline-block !important;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#camp {
+    width: 49%;
+    background-color: var(--dark-primary-color);
+    padding-bottom: 42px;
+    display: inline-block !important;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#report {
+    display: none;
+}

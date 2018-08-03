@@ -19,6 +19,7 @@ document.querySelector('#logout').addEventListener('click', async ev => {
 let lostNumber, lostNationalities = {}, lostGenders = {}, lostLocations;
 
 document.getElementById('generate').addEventListener('click', async function() {
+    document.getElementById('report').style.display = 'block';
     const querySnapshot = await db.collection('users')
     .where('lostStatus', '==', true)
     .get();
