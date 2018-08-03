@@ -69,7 +69,7 @@
       overflow: auto;
     }
 
-    #map {
+    .map {
       /* margin-right: 400px; */
       height: 80vh !important;
     }
@@ -85,7 +85,7 @@
     }
 
     @media print {
-      #map {
+      .map {
         height: 500px;
         margin: 0;
       }
@@ -118,34 +118,11 @@
   </ul>
 
   <main class="container">
-    <a class="btn-floating btn-large waves-effect waves-light green" id="found">
-      <i class="material-icons">check</i>
-    </a>
-    <div id="right-panel"></div>
-    <div id="map"></div>
+    <!-- <div id="right-panel"></div>
+    <div id="map"></div> -->
 
     <ul class="collapsible" id="insertMaps">
-      <li class="active">
-        <div class="collapsible-header">
-          <i class="material-icons">filter_drama</i>First</div>
-        <div class="collapsible-body">
-          <span>Lorem ipsum dolor sit amet.</span>
-        </div>
-      </li>
-      <li>
-        <div class="collapsible-header">
-          <i class="material-icons">place</i>Second</div>
-        <div class="collapsible-body">
-          <span>Lorem ipsum dolor sit amet.</span>
-        </div>
-      </li>
-      <li>
-        <div class="collapsible-header">
-          <i class="material-icons">whatshot</i>Third</div>
-        <div class="collapsible-body">
-          <span>Lorem ipsum dolor sit amet.</span>
-        </div>
-      </li>
+
     </ul>
   </main>
 
@@ -173,7 +150,7 @@
     };
     firebase.initializeApp(config);
   </script>
-  <script src="./scripts/admin.js"></script>
+  <script src="./scripts/leader.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCmIHOkkreK1H1avtpMnu-YxCcT2zmgoCs&callback=initMap">
   </script>
   <script src="scripts/reports.js"></script>
