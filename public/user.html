@@ -18,9 +18,16 @@
 
     /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
+    
+    .map-container {
+      text-align: center;
+    }
 
     #map {
-      height: 80vh !important;
+      height: 400px !important;
+      width: 90%;
+      margin-right: auto;
+      margin-left: auto;
     }
 
     /* Optional: Makes the sample page fill the window. */
@@ -123,7 +130,9 @@
     <a class="btn-floating btn-large waves-effect waves-light red" id="lost">
       <i class="material-icons">directions_run</i>
     </a>
-    <div id="map"></div>
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
   </main>
 
 
